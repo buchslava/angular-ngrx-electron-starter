@@ -6,7 +6,7 @@ import { FormControl } from '@angular/forms';
   template: `
       <input type = "text" placeholder = "Add todo.." [formControl] = "control">
       <button (click) = "add.next(control.value)">Add</button>
-      <div *ngIf="_pending">processing...</div>
+      <div *ngIf="this.control.disabled">processing...</div>
   `,
   styleUrls: ['./add-todo.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -15,11 +15,9 @@ export class AddTodoComponent implements OnInit {
   control: FormControl = new FormControl('');
   @Output() add = new EventEmitter();
 
-  private _pending = false;
-
   constructor() {
     this.add.subscribe(() => {
-      this._pending = true;
+      this.control.disable();
     });
   }
 
@@ -36,7 +34,7 @@ export class AddTodoComponent implements OnInit {
   @Input()
   set pending(action) {
     if (action) {
-      this._pending = false;
+      this.control.enable();
     }
   }
 }
