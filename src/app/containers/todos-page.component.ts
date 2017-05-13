@@ -16,19 +16,21 @@ import { TodoItem } from '../models/todo.model';
 @Component({
   selector: 'app-todospage',
   template: `
-    <app-filters [filters]="filters"
-             [active]="activeFilter$ | async"
-             (changeFilter)="changeFilter($event)">
-    </app-filters>
-    <app-todos [todos]="todos$ | async" (toggle)="toggleTodo($event)" (remove)="removeTodo($event)"></app-todos>
+      <app-filters [filters] = "filters"
+                   [active] = "activeFilter$ | async"
+                   (changeFilter) = "changeFilter($event)">
+      </app-filters>
+      <app-todos [todos] = "todos$ | async" (toggle) = "toggleTodo($event)" (remove) = "removeTodo($event)"></app-todos>
 
-    <app-add-todo (add)="addTodo($event)" [reset]="addTodoSuccess$ | async"></app-add-todo>
+      <app-add-todo (add) = "addTodo($event)" [reset] = "addTodoSuccess$ | async"
+                    [pending] = "addTodo$ | async"></app-add-todo>
   `,
   styleUrls: ['./todos-page.component.css']
 })
 export class TodospageComponent {
   todos$: Observable<TodosState>;
   addTodoSuccess$: Observable<Action>;
+  addTodo$: Observable<Action>;
   activeFilter$: Observable<TodoFilter>;
 
   filters: FilterRecord[] = [{id: 'SHOW_ALL', title: 'All'}, {id: 'SHOW_COMPLETED', title: 'Completed'}, {
@@ -43,9 +45,10 @@ export class TodospageComponent {
               private todoService: TodosService) {
     this.store.dispatch(todoActions.getTodos());
     this.activeFilter$ = store.select(getFilterState);
-    this.addTodoSuccess$ = this.todosEffects.addTodo$.filter(( { type }) => type === TodoActions.ADD_TODO_SUCCESS);
+    this.addTodo$ = this.todosEffects.addTodo$;
+    this.addTodoSuccess$ = this.addTodo$.filter(({type}) => type === TodoActions.ADD_TODO_SUCCESS);
     this.todos$ = Observable.combineLatest(this.store.select(getTodosState), this.activeFilter$,
-      (todos: TodosState , filter: TodoFilter): TodosState => {
+      (todos: TodosState, filter: TodoFilter): TodosState => {
         return {
           pending: todos.pending,
           error: todos.error,
@@ -55,20 +58,19 @@ export class TodospageComponent {
     );
   }
 
-  addTodo( title: string ) {
+  addTodo(title: string) {
     this.store.dispatch(this.todoActions.addTodo(title));
   }
 
-  toggleTodo( todo: TodoItem ) {
+  toggleTodo(todo: TodoItem) {
     this.store.dispatch(this.todoActions.toggleTodo(todo));
   }
 
-  removeTodo( todo: TodoItem ) {
+  removeTodo(todo: TodoItem) {
     this.store.dispatch(this.todoActions.removeTodo(todo));
   }
 
-  changeFilter( filter: TodoFilter ) {
+  changeFilter(filter: TodoFilter) {
     this.store.dispatch(this.filterActions.setVisibilityFilter(filter));
   }
-
 }
