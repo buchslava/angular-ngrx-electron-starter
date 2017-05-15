@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { StoreModule } from '@ngrx/store';
+import { NgxElectronModule } from 'ngx-electron';
 
 import { default as reducer } from './reducers';
 import { AppComponent } from './containers/app.component';
@@ -31,6 +32,7 @@ import { FilterActions } from './actions/filter.actions';
     FilterComponent
   ],
   imports: [
+    NgxElectronModule,
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,

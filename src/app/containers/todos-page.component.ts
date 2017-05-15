@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, NgZone, OnDestroy } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/filter';
+import { ElectronService } from 'ngx-electron';
 
 import { Action, Store } from '@ngrx/store';
 import { TodosEffects } from '../effects/todos.effects';
@@ -20,14 +22,18 @@ import { TodoItem } from '../models/todo.model';
                    [active] = "activeFilter$ | async"
                    (changeFilter) = "changeFilter($event)">
       </app-filters>
-      <app-todos [todos] = "todos$ | async" (toggle) = "toggleTodo($event)" (remove) = "removeTodo($event)"></app-todos>
+      <input type = "button" (click) = "open()" value = "Open">
+      <input type = "button" (click) = "save()" value = "Save">
+      <app-todos [todos] = "todos$ | async"
+                 (toggle) = "toggleTodo($event)"
+                 (remove) = "removeTodo($event)"></app-todos>
 
       <app-add-todo (add) = "addTodo($event)" [reset] = "addTodoSuccess$ | async"
                     [pending] = "addTodo$ | async"></app-add-todo>
   `,
   styleUrls: ['./todos-page.component.css']
 })
-export class TodospageComponent {
+export class TodospageComponent implements OnDestroy {
   todos$: Observable<TodosState>;
   addTodoSuccess$: Observable<Action>;
   addTodo$: Observable<Action>;
@@ -38,7 +44,9 @@ export class TodospageComponent {
     title: 'Active'
   }];
 
-  constructor(private store: Store<AppState>,
+  constructor(private zone: NgZone,
+              private electronService: ElectronService,
+              private store: Store<AppState>,
               private todoActions: TodoActions,
               private filterActions: FilterActions,
               private todosEffects: TodosEffects,
@@ -56,6 +64,28 @@ export class TodospageComponent {
         };
       }
     );
+
+    const newTodoContent = Observable.fromEvent(
+      this.electronService.ipcRenderer, 'new-todo-content', (event, content) => content);
+
+    newTodoContent.subscribe((content: string) => {
+      let jsonContent = null;
+
+      try {
+        jsonContent = JSON.parse(content);
+      } catch (err) {
+        return;
+      }
+
+      this.todoService.todos = jsonContent;
+      this.zone.run(() => {
+        this.store.dispatch(todoActions.getTodos());
+      });
+    });
+  }
+
+  ngOnDestroy() {
+    this.synchronizeServiceDataWithStore();
   }
 
   addTodo(title: string) {
@@ -72,5 +102,25 @@ export class TodospageComponent {
 
   changeFilter(filter: TodoFilter) {
     this.store.dispatch(this.filterActions.setVisibilityFilter(filter));
+  }
+
+  open() {
+    this.electronService.ipcRenderer.send('open-from-file');
+  }
+
+  save() {
+    this.electronService.ipcRenderer.send('save-to-file', this.getCurrentState().todos.data);
+  }
+
+  getCurrentState() {
+    let state = null;
+
+    this.store.subscribe(s => state = s);
+
+    return state;
+  }
+
+  synchronizeServiceDataWithStore() {
+    this.todoService.todos = this.getCurrentState().todos.data;
   }
 }
