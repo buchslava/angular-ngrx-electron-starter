@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
 @Component({
@@ -6,12 +6,12 @@ import { FormControl } from '@angular/forms';
   template: `
       <input type = "text" placeholder = "Add todo.." [formControl] = "control">
       <button (click) = "add.next(control.value)">Add</button>
-      <div *ngIf="this.control.disabled">processing...</div>
+      <div *ngIf = "control.disabled">processing...</div>
   `,
   styleUrls: ['./add-todo.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AddTodoComponent implements OnInit {
+export class AddTodoComponent {
   control: FormControl = new FormControl('');
   @Output() add = new EventEmitter();
 
@@ -19,9 +19,6 @@ export class AddTodoComponent implements OnInit {
     this.add.subscribe(() => {
       this.control.disable();
     });
-  }
-
-  ngOnInit() {
   }
 
   @Input()
