@@ -1,5 +1,5 @@
 
-# Angular2 Electron Starter (with angular cli and ngrx)
+# Electron Starter (with angular cli and ngrx)
 
 ```bash
 
