@@ -24,6 +24,8 @@ import { TodoItem } from '../models/todo.model';
       </app-filters>
       <input type = "button" (click) = "open()" value = "Open">
       <input type = "button" (click) = "save()" value = "Save">
+      <input type = "button" (click) = "redo()" value = "Redo">
+      <input type = "button" (click) = "undo()" value = "Undo">
       <app-todos [todos] = "todos$ | async"
                  (toggle) = "toggleTodo($event)"
                  (remove) = "removeTodo($event)"></app-todos>
@@ -122,5 +124,13 @@ export class TodospageComponent implements OnDestroy {
 
   synchronizeServiceDataWithStore() {
     this.todoService.todos = this.getCurrentState().todos.data;
+  }
+
+  redo() {
+    this.store.dispatch({type: 'REDO'});
+  }
+
+  undo() {
+    this.store.dispatch({type: 'UNDO'});
   }
 }
