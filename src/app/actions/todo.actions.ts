@@ -69,5 +69,4 @@ export class TodoActions {
       payload: todo
     };
   }
-
 }
