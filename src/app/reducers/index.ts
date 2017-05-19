@@ -19,7 +19,7 @@ const stateSwitcher = new StateSwitcher([
 ]).preventDefaultInit();
 const stateSwitchReducer: Function = stateSwitcher.getStateReducer();
 
-export default compose(stateSwitchReducer, storeLogger(), combineReducers)({
+export default compose(storeLogger(), stateSwitchReducer, combineReducers)({
   todos: todosReducer,
   filter: visibilityFilter
 });
