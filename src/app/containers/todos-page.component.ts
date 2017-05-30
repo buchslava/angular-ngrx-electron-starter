@@ -1,4 +1,4 @@
-import { Component, NgZone, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/observable/fromEvent';
@@ -37,6 +37,7 @@ import { TodoItem } from '../models/todo.model';
 })
 export class TodospageComponent implements OnDestroy {
   todos$: Observable<TodosState>;
+  getTodosSuccess$: Observable<Action>;
   addTodoSuccess$: Observable<Action>;
   addTodo$: Observable<Action>;
   activeFilter$: Observable<TodoFilter>;
@@ -46,7 +47,7 @@ export class TodospageComponent implements OnDestroy {
     title: 'Active'
   }];
 
-  constructor(private zone: NgZone,
+  constructor(private changeDetectorRef: ChangeDetectorRef,
               private electronService: ElectronService,
               private store: Store<AppState>,
               private todoActions: TodoActions,
@@ -56,6 +57,7 @@ export class TodospageComponent implements OnDestroy {
     this.store.dispatch(todoActions.getTodos());
     this.activeFilter$ = store.select(getFilterState);
     this.addTodo$ = this.todosEffects.addTodo$;
+    this.getTodosSuccess$ = this.todosEffects.getTodos$.filter(({type}) => type === TodoActions.GET_TODOS_SUCCESS);
     this.addTodoSuccess$ = this.addTodo$.filter(({type}) => type === TodoActions.ADD_TODO_SUCCESS);
     this.todos$ = Observable.combineLatest(this.store.select(getTodosState), this.activeFilter$,
       (todos: TodosState, filter: TodoFilter): TodosState => {
@@ -66,6 +68,9 @@ export class TodospageComponent implements OnDestroy {
         };
       }
     );
+    this.getTodosSuccess$.subscribe(() => {
+      this.changeDetectorRef.detectChanges();
+    });
 
     const newTodoContent = Observable.fromEvent(
       this.electronService.ipcRenderer, 'new-todo-content', (event, content) => content);
@@ -80,9 +85,7 @@ export class TodospageComponent implements OnDestroy {
       }
 
       this.todoService.todos = jsonContent;
-      this.zone.run(() => {
-        this.store.dispatch(todoActions.getTodos());
-      });
+      this.store.dispatch(todoActions.getTodos());
     });
   }
 
